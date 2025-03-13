@@ -1,0 +1,78 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;        /* White */
+    --foreground: 0 0% 0%;          /* Black */
+
+    --card: 0 0% 100%;              /* White */
+    --card-foreground: 0 0% 0%;     /* Black */
+
+    --popover: 0 0% 100%;           /* White */
+    --popover-foreground: 0 0% 0%;  /* Black */
+
+    --primary: 24 95% 53%;          /* Orange */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 20 96% 48%;        /* Dark Orange */
+    --secondary-foreground: 0 0% 100%; /* White */
+
+    --muted: 0 0% 95%;              /* Light gray */
+    --muted-foreground: 0 0% 40%;   /* Dark gray */
+
+    --accent: 30 100% 92%;          /* Light Orange */
+    --accent-foreground: 0 0% 0%;   /* Black */
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 24 95% 53%;             /* Orange */
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-white text-ai-dark antialiased font-medium;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  p {
+    @apply font-medium;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-ai-orange to-ai-darkOrange bg-clip-text text-transparent;
+  }
+  
+  .glass-card {
+    @apply bg-black/5 backdrop-blur-lg border border-black/10 shadow-lg;
+  }
+  
+  .hero-blur {
+    @apply backdrop-blur-md bg-white/80 border border-ai-orange/20;
+  }
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
