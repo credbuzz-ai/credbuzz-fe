@@ -148,9 +148,9 @@ const KOLDashboard = () => {
           }),
         }
       );
-      if (response.status === 200) {
+      if (response.status === 200 && campaign.campaign_id) {
         fetchCampaigns();
-        await contract?.acceptProjectCampaign("0xbd14075e");
+        await contract?.acceptProjectCampaign(campaign.campaign_id);
         toast({
           title: "Campaign accepted",
           description: "You have accepted the campaign",
@@ -184,8 +184,8 @@ const KOLDashboard = () => {
       }
     );
 
-    if (response.status === 200) {
-      await contract?.fulfilProjectCampaign("0xbd14075e");
+    if (response.status === 200 && campaignId) {
+      await contract?.fulfilProjectCampaign(Number(campaignId));
       toast({
         title: "Campaign claimed",
         description: "You have claimed the campaign",
@@ -218,18 +218,32 @@ const KOLDashboard = () => {
                     </h3>
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded ${
-                        campaign.status === "accepted"
+                        campaign.status === "accepted" ||
+                        campaign.status === "active"
                           ? "bg-green-100 text-green-800"
-                          : isExpired
+                          : campaign.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : campaign.status === "fulfilled"
+                          ? "bg-blue-100 text-blue-800"
+                          : campaign.status === "expired"
                           ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
+                          : campaign.status === "discarded"
+                          ? "bg-gray-100 text-gray-800"
+                          : "bg-gray-200 text-gray-900"
                       }`}
                     >
-                      {campaign.status === "accepted"
+                      {campaign.status === "accepted" ||
+                      campaign.status === "active"
                         ? "Active"
-                        : isExpired
+                        : campaign.status === "pending"
+                        ? "Pending"
+                        : campaign.status === "fulfilled"
+                        ? "Fulfilled"
+                        : campaign.status === "expired"
                         ? "Expired"
-                        : "Pending"}
+                        : campaign.status === "discarded"
+                        ? "Discarded"
+                        : "Unknown"}
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -286,12 +300,7 @@ const KOLDashboard = () => {
                             Claim
                           </Button>
                         ) : (
-                          <Button
-                            disabled
-                            className="opacity-50 cursor-not-allowed"
-                          >
-                            Expired
-                          </Button>
+                          <></>
                         )}
                       </>
                     )}

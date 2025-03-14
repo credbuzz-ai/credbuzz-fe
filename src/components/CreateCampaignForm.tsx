@@ -189,7 +189,7 @@ export function CreateCampaignForm({
         };
       }
 
-      await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -198,6 +198,13 @@ export function CreateCampaignForm({
         },
         body: JSON.stringify(requestBody),
       });
+
+      const data = await response.json();
+      console.log(response);
+
+      if (!response.ok) {
+        throw new Error("Failed to save campaign");
+      }
 
       // Add the selected KOL's name to the campaign data
       const campaignData = { ...formData };
@@ -229,13 +236,16 @@ export function CreateCampaignForm({
 
       const userDetails = await userData.json();
 
-      if (!existingCampaign) {
+      const campaignId = data.result.campaign_id[0][0];
+
+      if (!existingCampaign && campaignId) {
         // todo: wallet address is mandatory
         await createNewCampaign(
           userDetails.result.wallet_addr,
           Number(ethers.parseUnits(campaignData.amount.toString(), 6)),
           Number(campaignData.promotion_end_date),
-          Number(campaignData.offer_end_date)
+          Number(campaignData.offer_end_date),
+          campaignId
         );
         await transferUSDC(
           Number(ethers.parseUnits(campaignData.amount.toString(), 6))

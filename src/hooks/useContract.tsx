@@ -77,7 +77,8 @@ export const useContract = () => {
     selectedKol: string,
     offeringAmount: number,
     promotionEndsIn: number,
-    offerEndsIn: number
+    offerEndsIn: number,
+    campaignId: number
   ) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
@@ -99,7 +100,7 @@ export const useContract = () => {
   };
 
   const updateCampaign = async (
-    campaignId: string,
+    campaignId: number,
     selectedKol: string,
     promotionEndsIn: number,
     offerEndsIn: number
@@ -124,7 +125,7 @@ export const useContract = () => {
   };
 
   // Owner Functions
-  const acceptProjectCampaign = async (campaignId: string) => {
+  const acceptProjectCampaign = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
       const tx = await contract.acceptProjectCampaign(campaignId, {
@@ -138,7 +139,7 @@ export const useContract = () => {
     }
   };
 
-  const fulfilProjectCampaign = async (campaignId: string) => {
+  const fulfilProjectCampaign = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
       const tx = await contract.fulfilProjectCampaign(campaignId, {
@@ -152,7 +153,7 @@ export const useContract = () => {
     }
   };
 
-  const discardCampaign = async (campaignId: string) => {
+  const discardCampaign = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
       const tx = await contract.discardCampaign(campaignId, {
@@ -211,7 +212,7 @@ export const useContract = () => {
     }
   };
 
-  const getCampaignInfo = async (campaignId: string) => {
+  const getCampaignInfo = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
       return await contract.getCampaignInfo(campaignId);
