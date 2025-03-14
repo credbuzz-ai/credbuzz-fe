@@ -6,7 +6,16 @@ import AppHeader from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/lib/types";
 import { useContract } from "@/hooks/useContract";
-
+import ClaimCampaignModal from "@/pages/ClaimCampaignModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 const KOLDashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, twitterConnected } = useAuth();
@@ -15,6 +24,9 @@ const KOLDashboard = () => {
   const [userId, setUserId] = useState(null);
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
   const { contract } = useContract();
+  const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [tweetLink, setTweetLink] = useState("");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
@@ -120,7 +132,7 @@ const KOLDashboard = () => {
 
     // Check if the offer has expired
     const currentTime = Date.now();
-    if (currentTime < new Date(campaign.offer_end_date * 1000).getTime()) {
+    if (currentTime < new Date(campaign.offer_end_date).getTime()) {
       const response = await fetch(
         `${import.meta.env.VITE_BASE_URL}/update-campaign`,
         {
@@ -154,7 +166,7 @@ const KOLDashboard = () => {
     }
   };
 
-  const claimCampaign = async (campaignId: string) => {
+  const claimCampaign = async (campaignId: string, tweetLink: string) => {
     const response = await fetch(
       `${import.meta.env.VITE_BASE_URL}/update-campaign`,
       {
@@ -167,6 +179,7 @@ const KOLDashboard = () => {
         body: JSON.stringify({
           campaign_id: campaignId,
           status: "fulfilled",
+          tweet_link: tweetLink,
         }),
       }
     );
@@ -177,6 +190,8 @@ const KOLDashboard = () => {
         title: "Campaign claimed",
         description: "You have claimed the campaign",
       });
+      setOpen(false);
+      fetchCampaigns();
     }
   };
 
@@ -191,8 +206,7 @@ const KOLDashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {campaigns.map((campaign) => {
               const isExpired =
-                Date.now() >=
-                new Date(campaign.offer_end_date * 1000).getTime();
+                Date.now() >= new Date(campaign.offer_end_date).getTime();
               return (
                 <div
                   key={campaign.campaign_id}
@@ -233,16 +247,14 @@ const KOLDashboard = () => {
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Offer ends:</span>
                       <span>
-                        {new Date(
-                          campaign.offer_end_date * 1000
-                        ).toLocaleDateString()}
+                        {new Date(campaign.offer_end_date).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mb-2">
                       <span>Promotion ends:</span>
                       <span>
                         {new Date(
-                          campaign.promotion_end_date * 1000
+                          campaign.promotion_end_date
                         ).toLocaleDateString()}
                       </span>
                     </div>
@@ -254,32 +266,34 @@ const KOLDashboard = () => {
                   </div>
 
                   <div className="flex justify-end items-center mt-3 gap-2">
-                    {campaign.status === "pending" && !isExpired && (
-                      <Button
-                        onClick={() =>
-                          acceptCampaign(campaign.campaign_id.toString())
-                        }
-                      >
-                        Accept
-                      </Button>
-                    )}
                     {!isExpired && (
-                      <Button
-                        disabled={campaign.status !== "accepted"}
-                        onClick={() =>
-                          claimCampaign(campaign.campaign_id.toString())
-                        }
-                      >
-                        Claim
-                      </Button>
-                    )}
-                    {campaign.status === "pending" && isExpired && (
-                      <Button
-                        disabled
-                        className="opacity-50 cursor-not-allowed"
-                      >
-                        Expired
-                      </Button>
+                      <>
+                        {campaign.status === "pending" ? (
+                          <Button
+                            onClick={() =>
+                              acceptCampaign(campaign.campaign_id.toString())
+                            }
+                          >
+                            Accept
+                          </Button>
+                        ) : campaign.status === "accepted" ? (
+                          <Button
+                            onClick={() => {
+                              setCampaignId(campaign.campaign_id.toString());
+                              setOpen(true);
+                            }}
+                          >
+                            Claim
+                          </Button>
+                        ) : (
+                          <Button
+                            disabled
+                            className="opacity-50 cursor-not-allowed"
+                          >
+                            Expired
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -295,6 +309,32 @@ const KOLDashboard = () => {
           </div>
         )}
       </main>
+
+      {campaignId && open && (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Submit Tweet Link</DialogTitle>
+            </DialogHeader>
+            <Input
+              type="url"
+              placeholder="Enter your tweet link"
+              value={tweetLink}
+              onChange={(e) => setTweetLink(e.target.value)}
+            />
+            <DialogFooter>
+              <Button onClick={() => claimCampaign(campaignId, tweetLink)}>
+                Submit
+              </Button>
+              <DialogClose asChild>
+                <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

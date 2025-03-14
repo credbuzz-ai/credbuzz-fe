@@ -147,7 +147,7 @@ export function CreateCampaignForm({
         ...formData,
         [name]:
           name === "offer_end_date" || name === "promotion_end_date"
-            ? parseFloat(value)
+            ? new Date(value).getTime()
             : value,
       });
     }
@@ -422,8 +422,12 @@ export function CreateCampaignForm({
             <Input
               id="offer_end_date"
               name="offer_end_date"
-              type="number"
-              value={formData.offer_end_date}
+              type="datetime-local"
+              value={
+                formData.offer_end_date
+                  ? new Date(formData.offer_end_date).toISOString().slice(0, 16)
+                  : ""
+              }
               onChange={handleChange}
               required
               min="0"
@@ -432,8 +436,12 @@ export function CreateCampaignForm({
             <Input
               id="offer_end_date"
               name="offer_end_date"
-              type="number"
-              value={formData.offer_end_date}
+              type="datetime-local"
+              value={
+                formData.offer_end_date
+                  ? new Date(formData.offer_end_date).toISOString().slice(0, 16)
+                  : ""
+              }
               onChange={handleChange}
               required
               min="0"
@@ -447,8 +455,14 @@ export function CreateCampaignForm({
             <Input
               id="promotion_end_date"
               name="promotion_end_date"
-              type="number"
-              value={formData.promotion_end_date}
+              type="datetime-local"
+              value={
+                formData.promotion_end_date
+                  ? new Date(formData.promotion_end_date)
+                      .toISOString()
+                      .slice(0, 16)
+                  : ""
+              }
               onChange={handleChange}
               required
               min="0"
@@ -457,8 +471,14 @@ export function CreateCampaignForm({
             <Input
               id="promotion_end_date"
               name="promotion_end_date"
-              type="number"
-              value={formData.promotion_end_date}
+              type="datetime-local"
+              value={
+                formData.promotion_end_date
+                  ? new Date(formData.promotion_end_date)
+                      .toISOString()
+                      .slice(0, 16)
+                  : ""
+              }
               onChange={handleChange}
               required
               min="0"

@@ -217,7 +217,7 @@ const BusinessDashboard = () => {
                         <span>Offer ends:</span>
                         <span>
                           {new Date(
-                            campaign.offer_end_date * 1000
+                            campaign.offer_end_date
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -225,7 +225,7 @@ const BusinessDashboard = () => {
                         <span>Promotion ends:</span>
                         <span>
                           {new Date(
-                            campaign.promotion_end_date * 1000
+                            campaign.promotion_end_date
                           ).toLocaleDateString()}
                         </span>
                       </div>
