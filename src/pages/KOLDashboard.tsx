@@ -5,8 +5,7 @@ import { toast, useToast } from "@/hooks/use-toast";
 import AppHeader from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/lib/types";
-import { useContract } from "@/hooks/useContract";
-import ClaimCampaignModal from "@/pages/ClaimCampaignModal";
+// import { useContract } from "@/hooks/useContract";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +15,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 const KOLDashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, twitterConnected } = useAuth();
@@ -23,10 +23,14 @@ const KOLDashboard = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [userId, setUserId] = useState(null);
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  const { contract } = useContract();
+  // const { contract } = useContract();
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [tweetLink, setTweetLink] = useState("");
   const [open, setOpen] = useState(false);
+  const [acceptModalOpen, setAcceptModalOpen] = useState(false);
+  const [aiTweet, setAiTweet] = useState("");
+  const [acceptCampaignId, setAcceptCampaignId] = useState<string | null>(null);
+  const [tweetVerificationOpen, setTweetVerificationOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
@@ -150,7 +154,7 @@ const KOLDashboard = () => {
       );
       if (response.status === 200 && campaign.campaign_id) {
         fetchCampaigns();
-        await contract?.acceptProjectCampaign(campaign.campaign_id);
+        // await contract?.acceptProjectCampaign(campaign.campaign_id);
         toast({
           title: "Campaign accepted",
           description: "You have accepted the campaign",
@@ -185,7 +189,7 @@ const KOLDashboard = () => {
     );
 
     if (response.status === 200 && campaignId) {
-      await contract?.fulfilProjectCampaign(Number(campaignId));
+      // await contract?.fulfilProjectCampaign(Number(campaignId));
       toast({
         title: "Campaign claimed",
         description: "You have claimed the campaign",
@@ -194,6 +198,33 @@ const KOLDashboard = () => {
       fetchCampaigns();
     }
   };
+
+  const [timeLeft, setTimeLeft] = useState(10); // 2 minutes
+
+  useEffect(() => {
+    if (!tweetVerificationOpen) {
+      setTimeLeft(10); // Reset timer when dialog is closed
+      return;
+    }
+
+    if (timeLeft === 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [tweetVerificationOpen, timeLeft]);
+
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // The actual KOL Dashboard layout and components
   return (
@@ -205,6 +236,30 @@ const KOLDashboard = () => {
         {campaigns && campaigns?.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {campaigns.map((campaign) => {
+              const offerEndTime = new Date(campaign.offer_end_date).getTime();
+              const promotionEndTime = new Date(
+                campaign.promotion_end_date
+              ).getTime();
+
+              const offerTimeLeft = Math.max(offerEndTime - currentTime, 0);
+              const promotionTimeLeft = Math.max(
+                promotionEndTime - currentTime,
+                0
+              );
+
+              const formatTimeLeft = (timeLeft: number) => {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor(
+                  (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+                );
+                const minutes = Math.floor(
+                  (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+                );
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+              };
+
               const isExpired =
                 Date.now() >= new Date(campaign.offer_end_date).getTime();
               return (
@@ -260,17 +315,29 @@ const KOLDashboard = () => {
                   <div className="border-t border-gray-100 pt-2 mt-2">
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Offer ends:</span>
-                      <span>
-                        {new Date(campaign.offer_end_date).toLocaleDateString()}
-                      </span>
+                      {campaign.offer_end_date > currentTime &&
+                      campaign.status === "pending" ? (
+                        <span>{formatTimeLeft(offerTimeLeft)}</span>
+                      ) : campaign.status === "accepted" ? (
+                        <span>Accepted</span>
+                      ) : campaign.status === "fulfilled" ? (
+                        <span>Fulfilled</span>
+                      ) : (
+                        <span>Expired</span>
+                      )}
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 mb-2">
                       <span>Promotion ends:</span>
-                      <span>
-                        {new Date(
-                          campaign.promotion_end_date
-                        ).toLocaleDateString()}
-                      </span>
+                      {campaign.promotion_end_date > currentTime &&
+                      campaign.status === "pending" ? (
+                        <span>{formatTimeLeft(promotionTimeLeft)}</span>
+                      ) : campaign.status === "accepted" ? (
+                        <span>Accepted</span>
+                      ) : campaign.status === "fulfilled" ? (
+                        <span>Fulfilled</span>
+                      ) : (
+                        <span>Expired</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex justify-end items-center mt-3">
@@ -284,9 +351,14 @@ const KOLDashboard = () => {
                       <>
                         {campaign.status === "pending" ? (
                           <Button
-                            onClick={() =>
-                              acceptCampaign(campaign.campaign_id.toString())
-                            }
+                            onClick={() => {
+                              setAcceptModalOpen(true);
+                              const text = `Boost your networking game with @${campaign.x_author_handle} 🚀 Try it now: ${campaign.website}`;
+                              setAiTweet(text);
+                              setAcceptCampaignId(
+                                campaign.campaign_id.toString()
+                              );
+                            }}
                           >
                             Accept
                           </Button>
@@ -332,11 +404,86 @@ const KOLDashboard = () => {
               onChange={(e) => setTweetLink(e.target.value)}
             />
             <DialogFooter>
-              <Button onClick={() => claimCampaign(campaignId, tweetLink)}>
+              <Button
+                onClick={() => {
+                  setOpen(false);
+                  setTweetVerificationOpen(true);
+                }}
+              >
                 Submit
               </Button>
               <DialogClose asChild>
                 <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {acceptModalOpen && (
+        <Dialog open={acceptModalOpen} onOpenChange={setAcceptModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Accept Campaign</DialogTitle>
+            </DialogHeader>
+
+            <Textarea value={aiTweet} className="mb-4" disabled={true} />
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  acceptCampaign(acceptCampaignId);
+                  setAcceptModalOpen(false);
+                }}
+              >
+                Accept
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAcceptModalOpen(false);
+                    setAiTweet("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {tweetVerificationOpen && (
+        <Dialog
+          open={tweetVerificationOpen}
+          onOpenChange={setTweetVerificationOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verifying Your Tweet</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col justify-center items-center h-full">
+              <div className="w-1/2 h-1/2 bg-gray-200 rounded-lg"></div>
+              <p className="mt-4 text-sm text-gray-500">
+                Verification will complete in {Math.floor(timeLeft / 60)}:
+                {(timeLeft % 60).toString().padStart(2, "0")}
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                disabled={timeLeft > 0}
+                onClick={() => {
+                  setTweetVerificationOpen(false);
+                  claimCampaign(campaignId, tweetLink);
+                }}
+              >
+                Complete Verification
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setTweetVerificationOpen(false)}
+                >
                   Cancel
                 </Button>
               </DialogClose>

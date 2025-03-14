@@ -16,7 +16,6 @@ export const useContract = () => {
   const [usdcContract, setUsdcContract] = useState<ethers.Contract | null>(
     null
   );
-  const gasLimit = 3000000;
 
   useEffect(() => {
     const initContract = async () => {
@@ -61,9 +60,7 @@ export const useContract = () => {
   const register = async () => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.register({
-        gasLimit,
-      });
+      const tx = await contract.register();
       await tx.wait();
       return tx;
     } catch (error) {
@@ -87,9 +84,7 @@ export const useContract = () => {
         offeringAmount,
         promotionEndsIn,
         offerEndsIn,
-        {
-          gasLimit,
-        }
+        campaignId
       );
       await tx.wait();
       return tx;
@@ -111,10 +106,7 @@ export const useContract = () => {
         campaignId,
         selectedKol,
         promotionEndsIn,
-        offerEndsIn,
-        {
-          gasLimit,
-        }
+        offerEndsIn
       );
       await tx.wait();
       return tx;
@@ -128,9 +120,7 @@ export const useContract = () => {
   const acceptProjectCampaign = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.acceptProjectCampaign(campaignId, {
-        gasLimit,
-      });
+      const tx = await contract.acceptProjectCampaign(campaignId);
       await tx.wait();
       return tx;
     } catch (error) {
@@ -142,9 +132,7 @@ export const useContract = () => {
   const fulfilProjectCampaign = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.fulfilProjectCampaign(campaignId, {
-        gasLimit,
-      });
+      const tx = await contract.fulfilProjectCampaign(campaignId);
       await tx.wait();
       return tx;
     } catch (error) {
@@ -156,9 +144,7 @@ export const useContract = () => {
   const discardCampaign = async (campaignId: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.discardCampaign(campaignId, {
-        gasLimit,
-      });
+      const tx = await contract.discardCampaign(campaignId);
       await tx.wait();
       return tx;
     } catch (error) {
@@ -170,9 +156,7 @@ export const useContract = () => {
   const updatePlatformFees = async (newFees: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.updatePlatformFees(newFees, {
-        gasLimit,
-      });
+      const tx = await contract.updatePlatformFees(newFees);
       await tx.wait();
       return tx;
     } catch (error) {

@@ -25,6 +25,16 @@ const BusinessDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     const checkConnection = async () => {
       if (typeof window.ethereum !== "undefined") {
@@ -172,6 +182,30 @@ const BusinessDashboard = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {campaigns && campaigns.length > 0 ? (
               campaigns.map((campaign, index) => {
+                const offerEndTime = new Date(
+                  campaign.offer_end_date
+                ).getTime();
+                const promotionEndTime = new Date(
+                  campaign.promotion_end_date
+                ).getTime();
+
+                const offerTimeLeft = Math.max(offerEndTime - currentTime, 0);
+                const promotionTimeLeft = Math.max(
+                  promotionEndTime - currentTime,
+                  0
+                );
+                const formatTimeLeft = (timeLeft: number) => {
+                  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                  const hours = Math.floor(
+                    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+                  );
+                  const minutes = Math.floor(
+                    (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+                  );
+                  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                  return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                };
                 const isExpired =
                   Date.now() >=
                   new Date(campaign.offer_end_date * 1000).getTime();
@@ -187,18 +221,32 @@ const BusinessDashboard = () => {
                       </h3>
                       <span
                         className={`text-xs font-medium px-2 py-1 rounded ${
-                          campaign.status === "accepted"
+                          campaign.status === "accepted" ||
+                          campaign.status === "active"
                             ? "bg-green-100 text-green-800"
-                            : isExpired
+                            : campaign.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : campaign.status === "fulfilled"
+                            ? "bg-blue-100 text-blue-800"
+                            : campaign.status === "expired"
                             ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
+                            : campaign.status === "discarded"
+                            ? "bg-gray-100 text-gray-800"
+                            : "bg-gray-200 text-gray-900"
                         }`}
                       >
-                        {campaign.status === "accepted"
+                        {campaign.status === "accepted" ||
+                        campaign.status === "active"
                           ? "Active"
-                          : isExpired
+                          : campaign.status === "pending"
+                          ? "Pending"
+                          : campaign.status === "fulfilled"
+                          ? "Fulfilled"
+                          : campaign.status === "expired"
                           ? "Expired"
-                          : "Pending"}
+                          : campaign.status === "discarded"
+                          ? "Discarded"
+                          : "Unknown"}
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -215,19 +263,29 @@ const BusinessDashboard = () => {
                     <div className="border-t border-gray-100 pt-2 mt-2">
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Offer ends:</span>
-                        <span>
-                          {new Date(
-                            campaign.offer_end_date
-                          ).toLocaleDateString()}
-                        </span>
+                        {campaign.offer_end_date > currentTime &&
+                        campaign.status === "pending" ? (
+                          <span>{formatTimeLeft(offerTimeLeft)}</span>
+                        ) : campaign.status === "accepted" ? (
+                          <span>Accepted</span>
+                        ) : campaign.status === "fulfilled" ? (
+                          <span>Fulfilled</span>
+                        ) : (
+                          <span>Expired</span>
+                        )}
                       </div>
                       <div className="flex justify-between text-xs text-gray-500 mb-2">
                         <span>Promotion ends:</span>
-                        <span>
-                          {new Date(
-                            campaign.promotion_end_date
-                          ).toLocaleDateString()}
-                        </span>
+                        {campaign.promotion_end_date > currentTime &&
+                        campaign.status === "pending" ? (
+                          <span>{formatTimeLeft(promotionTimeLeft)}</span>
+                        ) : campaign.status === "accepted" ? (
+                          <span>Accepted</span>
+                        ) : campaign.status === "fulfilled" ? (
+                          <span>Fulfilled</span>
+                        ) : (
+                          <span>Expired</span>
+                        )}
                       </div>
                     </div>
                     <div className="flex justify-between items-center mt-3">
