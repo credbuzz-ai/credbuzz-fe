@@ -5,7 +5,6 @@ import IERC20Abi from "../abis/IERC20.json";
 // Replace with your deployed contract address
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
-const OWNER_ADDRESS = import.meta.env.VITE_OWNER_ADDRESS;
 
 // Add USDC ABI - we only need transfer function
 const USDC_ABI = IERC20Abi;
@@ -17,6 +16,7 @@ export const useContract = () => {
   const [usdcContract, setUsdcContract] = useState<ethers.Contract | null>(
     null
   );
+  const gasLimit = 3000000;
 
   useEffect(() => {
     const initContract = async () => {
@@ -34,7 +34,7 @@ export const useContract = () => {
           // Create contract instance
           const contractInstance = new ethers.Contract(
             CONTRACT_ADDRESS,
-            MarketplaceAbi.abi,
+            MarketplaceAbi,
             contractSigner
           );
           setContract(contractInstance);
@@ -61,7 +61,9 @@ export const useContract = () => {
   const register = async () => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.register();
+      const tx = await contract.register({
+        gasLimit,
+      });
       await tx.wait();
       return tx;
     } catch (error) {
@@ -83,7 +85,10 @@ export const useContract = () => {
         selectedKol,
         offeringAmount,
         promotionEndsIn,
-        offerEndsIn
+        offerEndsIn,
+        {
+          gasLimit,
+        }
       );
       await tx.wait();
       return tx;
@@ -105,7 +110,10 @@ export const useContract = () => {
         campaignId,
         selectedKol,
         promotionEndsIn,
-        offerEndsIn
+        offerEndsIn,
+        {
+          gasLimit,
+        }
       );
       await tx.wait();
       return tx;
@@ -119,7 +127,9 @@ export const useContract = () => {
   const acceptProjectCampaign = async (campaignId: string) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.acceptProjectCampaign(campaignId);
+      const tx = await contract.acceptProjectCampaign(campaignId, {
+        gasLimit,
+      });
       await tx.wait();
       return tx;
     } catch (error) {
@@ -131,7 +141,9 @@ export const useContract = () => {
   const fulfilProjectCampaign = async (campaignId: string) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.fulfilProjectCampaign(campaignId);
+      const tx = await contract.fulfilProjectCampaign(campaignId, {
+        gasLimit,
+      });
       await tx.wait();
       return tx;
     } catch (error) {
@@ -143,7 +155,9 @@ export const useContract = () => {
   const discardCampaign = async (campaignId: string) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.discardCampaign(campaignId);
+      const tx = await contract.discardCampaign(campaignId, {
+        gasLimit,
+      });
       await tx.wait();
       return tx;
     } catch (error) {
@@ -155,7 +169,9 @@ export const useContract = () => {
   const updatePlatformFees = async (newFees: number) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
-      const tx = await contract.updatePlatformFees(newFees);
+      const tx = await contract.updatePlatformFees(newFees, {
+        gasLimit,
+      });
       await tx.wait();
       return tx;
     } catch (error) {
@@ -210,10 +226,7 @@ export const useContract = () => {
     try {
       if (!usdcContract) throw new Error("USDC contract not initialized");
 
-      // Convert amount to proper decimals (6 decimals for USDC on Base)
-      const amountWithDecimals = ethers.parseUnits(amount.toString(), 6);
-
-      const tx = await usdcContract.transfer(OWNER_ADDRESS, amountWithDecimals);
+      const tx = await usdcContract.transfer(CONTRACT_ADDRESS, amount);
       await tx.wait();
       return tx;
     } catch (error) {

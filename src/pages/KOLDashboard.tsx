@@ -5,6 +5,7 @@ import { toast, useToast } from "@/hooks/use-toast";
 import AppHeader from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/lib/types";
+import { useContract } from "@/hooks/useContract";
 
 const KOLDashboard = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const KOLDashboard = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [userId, setUserId] = useState(null);
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
+  const { contract } = useContract();
 
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
@@ -136,6 +138,7 @@ const KOLDashboard = () => {
       );
       if (response.status === 200) {
         fetchCampaigns();
+        await contract?.acceptProjectCampaign("0xbd14075e");
         toast({
           title: "Campaign accepted",
           description: "You have accepted the campaign",
@@ -148,6 +151,32 @@ const KOLDashboard = () => {
         variant: "destructive",
       });
       return;
+    }
+  };
+
+  const claimCampaign = async (campaignId: string) => {
+    const response = await fetch(
+      `${import.meta.env.VITE_BASE_URL}/update-campaign`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_TEST_API_KEY,
+          source: import.meta.env.VITE_SOURCE,
+        },
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          status: "fulfilled",
+        }),
+      }
+    );
+
+    if (response.status === 200) {
+      await contract?.fulfilProjectCampaign("0xbd14075e");
+      toast({
+        title: "Campaign claimed",
+        description: "You have claimed the campaign",
+      });
     }
   };
 
@@ -223,20 +252,36 @@ const KOLDashboard = () => {
                       {campaign.amount} USDC
                     </div>
                   </div>
-                  {campaign.status === "pending" && !isExpired && (
-                    <Button
-                      onClick={() =>
-                        acceptCampaign(campaign.campaign_id.toString())
-                      }
-                    >
-                      Accept
-                    </Button>
-                  )}
-                  {campaign.status === "pending" && isExpired && (
-                    <Button disabled className="opacity-50 cursor-not-allowed">
-                      Expired
-                    </Button>
-                  )}
+
+                  <div className="flex justify-end items-center mt-3 gap-2">
+                    {campaign.status === "pending" && !isExpired && (
+                      <Button
+                        onClick={() =>
+                          acceptCampaign(campaign.campaign_id.toString())
+                        }
+                      >
+                        Accept
+                      </Button>
+                    )}
+                    {!isExpired && (
+                      <Button
+                        disabled={campaign.status !== "accepted"}
+                        onClick={() =>
+                          claimCampaign(campaign.campaign_id.toString())
+                        }
+                      >
+                        Claim
+                      </Button>
+                    )}
+                    {campaign.status === "pending" && isExpired && (
+                      <Button
+                        disabled
+                        className="opacity-50 cursor-not-allowed"
+                      >
+                        Expired
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             })}

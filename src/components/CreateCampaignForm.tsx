@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { useContract } from "@/hooks/useContract";
 import { Campaign, KOL } from "@/lib/types";
+import { ethers } from "ethers";
 interface CreateCampaignFormProps {
   onCampaignCreated: (campaign: Campaign) => void;
   existingCampaign?: Campaign | null;
@@ -135,15 +136,21 @@ export function CreateCampaignForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]:
-        name === "offer_end_date" ||
-        name === "promotion_end_date" ||
-        name === "amount"
-          ? parseFloat(value)
-          : value,
-    });
+
+    if (name === "amount") {
+      setFormData({
+        ...formData,
+        amount: Number(value),
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]:
+          name === "offer_end_date" || name === "promotion_end_date"
+            ? parseFloat(value)
+            : value,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -226,11 +233,13 @@ export function CreateCampaignForm({
         // todo: wallet address is mandatory
         await createNewCampaign(
           userDetails.result.wallet_addr,
-          Number(campaignData.amount),
+          Number(ethers.parseUnits(campaignData.amount.toString(), 6)),
           Number(campaignData.promotion_end_date),
           Number(campaignData.offer_end_date)
         );
-        await transferUSDC(Number(campaignData.amount));
+        await transferUSDC(
+          Number(ethers.parseUnits(campaignData.amount.toString(), 6))
+        );
       } else {
         // todo
         // await updateCampaign(
@@ -242,7 +251,12 @@ export function CreateCampaignForm({
 
         if (existingCampaign.amount < campaignData.amount) {
           await transferUSDC(
-            Number(campaignData.amount - existingCampaign.amount)
+            Number(
+              ethers.parseUnits(
+                (campaignData.amount - existingCampaign.amount).toString(),
+                6
+              )
+            )
           );
         }
       }
