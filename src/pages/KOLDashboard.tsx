@@ -23,7 +23,7 @@ const KOLDashboard = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [userId, setUserId] = useState(null);
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  const { fulfilProjectCampaign, acceptProjectCampaign } = useContract();
+  const { contract } = useContract();
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [tweetLink, setTweetLink] = useState("");
   const [open, setOpen] = useState(false);
@@ -156,7 +156,9 @@ const KOLDashboard = () => {
       );
       if (response.status === 200 && campaign.campaign_id) {
         fetchCampaigns();
-        await acceptProjectCampaign(campaign.campaign_id);
+        await contract?.acceptProjectCampaign(campaign.campaign_id, {
+          gasLimit: 3000000, // Increase as needed
+        });
         toast({
           title: "Campaign accepted",
           description: "You have accepted the campaign",
@@ -191,7 +193,9 @@ const KOLDashboard = () => {
     );
 
     if (response.status === 200 && campaignId) {
-      await fulfilProjectCampaign(Number(campaignId));
+      await contract?.fulfilProjectCampaign(Number(campaignId), {
+        gasLimit: 3000000, // Increase as needed
+      });
       toast({
         title: "Campaign claimed",
         description: "You have claimed the campaign",
@@ -373,8 +377,7 @@ const KOLDashboard = () => {
 
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Promotion ends:</span>
-                      {campaign.promotion_end_date > currentTime &&
-                      campaign.status === "accepted" ? (
+                      {campaign.promotion_end_date > currentTime ? (
                         <span>{formatTimeLeft(promotionTimeLeft)}</span>
                       ) : (
                         <span>
@@ -400,28 +403,35 @@ const KOLDashboard = () => {
                             onClick={async () => {
                               setAiTweet("Generating tweet...");
                               setAcceptModalOpen(true);
+                              setAcceptCampaignId(
+                                campaign.campaign_id.toString()
+                              );
                               const prompt = `Generate a tweet about ${campaign.project_name}. It should highlight: 
                               1. The project's core purpose: ${campaign.description}
                               2. Include the Twitter handle: ${campaign.x_author_handle}
                               3. Mention the website: ${campaign.website}
                               4. Keep it concise and engaging, under 280 characters.`;
-                              const text = await fetch(
-                                `${import.meta.env.VITE_GENERATE_TWEET_URL}`,
-                                {
-                                  method: "POST",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify({
-                                    prompt,
-                                  }),
-                                }
-                              );
-                              const data = await text.json();
-                              setAiTweet(data.tweet);
-                              setAcceptCampaignId(
-                                campaign.campaign_id.toString()
-                              );
+                              try {
+                                const text = await fetch(
+                                  `${import.meta.env.VITE_GENERATE_TWEET_URL}`,
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                      prompt,
+                                    }),
+                                  }
+                                );
+                                const data = await text.json();
+                                setAiTweet(data.tweet);
+                              } catch (error) {
+                                setAiTweet(
+                                  "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos."
+                                );
+                                console.error(error);
+                              }
                             }}
                           >
                             Accept
