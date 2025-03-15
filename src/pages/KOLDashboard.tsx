@@ -397,10 +397,28 @@ const KOLDashboard = () => {
                       <>
                         {campaign.status === "open" ? (
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
+                              setAiTweet("Generating tweet...");
                               setAcceptModalOpen(true);
-                              const text = `Boost your networking game with @${campaign.x_author_handle} 🚀 Try it now: ${campaign.website}`;
-                              setAiTweet(text);
+                              const prompt = `Generate a tweet about ${campaign.project_name}. It should highlight: 
+                              1. The project's core purpose: ${campaign.description}
+                              2. Include the Twitter handle: ${campaign.x_author_handle}
+                              3. Mention the website: ${campaign.website}
+                              4. Keep it concise and engaging, under 280 characters.`;
+                              const text = await fetch(
+                                `${import.meta.env.VITE_GENERATE_TWEET_URL}`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    prompt,
+                                  }),
+                                }
+                              );
+                              const data = await text.json();
+                              setAiTweet(data.tweet);
                               setAcceptCampaignId(
                                 campaign.campaign_id.toString()
                               );
