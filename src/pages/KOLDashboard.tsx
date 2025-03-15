@@ -370,6 +370,7 @@ const KOLDashboard = () => {
                             accepted: "Accepted",
                             fulfilled: "Fulfilled",
                             unfulfilled: "Unfulfilled",
+                            discarded: "Discarded",
                           }[campaign.status] || "Expired"}
                         </span>
                       )}
@@ -377,13 +378,15 @@ const KOLDashboard = () => {
 
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Promotion ends:</span>
-                      {campaign.promotion_end_date > currentTime ? (
+                      {campaign.promotion_end_date > currentTime &&
+                      campaign.status !== "discarded" ? (
                         <span>{formatTimeLeft(promotionTimeLeft)}</span>
                       ) : (
                         <span>
                           {{
                             fulfilled: "Fulfilled",
                             unfulfilled: "Unfulfilled",
+                            discarded: "Discarded",
                           }[campaign.status] || "Expired"}
                         </span>
                       )}
