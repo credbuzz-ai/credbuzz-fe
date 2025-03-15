@@ -98,7 +98,8 @@ export const useContract = () => {
     campaignId: number,
     selectedKol: string,
     promotionEndsIn: number,
-    offerEndsIn: number
+    offerEndsIn: number,
+    newAmount: number
   ) => {
     try {
       if (!contract) throw new Error("Contract not initialized");
@@ -106,7 +107,8 @@ export const useContract = () => {
         campaignId,
         selectedKol,
         promotionEndsIn,
-        offerEndsIn
+        offerEndsIn,
+        newAmount
       );
       await tx.wait();
       return tx;

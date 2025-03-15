@@ -213,24 +213,24 @@ const KOLDashboard = () => {
 
     const timer = setInterval(async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BASE_URL}/verify-tweet`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": import.meta.env.VITE_TEST_API_KEY,
-              source: import.meta.env.VITE_SOURCE,
-            },
-            body: JSON.stringify({
-              campaign_id: campaignId,
-            }),
-          }
-        );
-        if (response.status === 200) {
-          const data = await response.json();
-          setVerificationStatus(data.result.verification_status);
-        }
+        // const response = await fetch(
+        //   `${import.meta.env.VITE_BASE_URL}/verify-tweet`,
+        //   {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //       "x-api-key": import.meta.env.VITE_TEST_API_KEY,
+        //       source: import.meta.env.VITE_SOURCE,
+        //     },
+        //     body: JSON.stringify({
+        //       campaign_id: campaignId,
+        //     }),
+        //   }
+        // );
+        // if (response.status === 200) {
+        //   const data = await response.json();
+        //   setVerificationStatus(data.result.verification_status);
+        // }
       } catch (error) {
         console.error(error);
       }

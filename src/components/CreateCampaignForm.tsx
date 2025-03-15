@@ -251,19 +251,19 @@ export function CreateCampaignForm({
           Number(ethers.parseUnits(formData.amount.toString(), 6))
         );
       } else {
-        // todo
-        // await updateCampaign(
-        //   existingCampaign.campaign_id.toString(),
-        //   userDetails.result.wallet_addr,
-        //   Number(campaignData.promotion_end_date),
-        //   Number(campaignData.offer_end_date)
-        // );
+        await updateCampaign(
+          existingCampaign.campaign_id,
+          formData.kol_wallet_addr,
+          Number(formData.promotion_end_date),
+          Number(formData.offer_end_date),
+          Number(ethers.parseUnits(formData.amount.toString(), 6))
+        );
 
-        if (existingCampaign.amount < campaignData.amount) {
+        if (existingCampaign.amount < formData.amount) {
           await transferUSDC(
             Number(
               ethers.parseUnits(
-                (campaignData.amount - existingCampaign.amount).toString(),
+                (formData.amount - existingCampaign.amount).toString(),
                 6
               )
             )
