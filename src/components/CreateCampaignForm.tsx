@@ -38,7 +38,7 @@ export function CreateCampaignForm({
     website: "",
     offer_end_date: 0,
     promotion_end_date: 0,
-    amount: 0,
+    amount: 0.0001,
     business_user_id: userId,
     kol_user_id: 0,
   });
@@ -90,7 +90,7 @@ export function CreateCampaignForm({
         website: "",
         offer_end_date: 0,
         promotion_end_date: 0,
-        amount: 0,
+        amount: 0.0001,
         business_user_id: userId,
         kol_user_id: 0,
       });
@@ -286,7 +286,7 @@ export function CreateCampaignForm({
           website: "",
           offer_end_date: 0,
           promotion_end_date: 0,
-          amount: 0,
+          amount: 0.0001,
           kol_user_id: 0,
           business_user_id: userId,
         });
@@ -524,7 +524,7 @@ export function CreateCampaignForm({
           value={formData.amount || ""}
           onChange={handleChange}
           required
-          // min="0"
+          min="0.0001"
           step="0.01"
         />
       </div>
