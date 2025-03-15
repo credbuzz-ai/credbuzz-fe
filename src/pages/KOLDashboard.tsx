@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Copy } from "lucide-react";
 const KOLDashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, twitterConnected } = useAuth();
@@ -157,7 +158,7 @@ const KOLDashboard = () => {
       if (response.status === 200 && campaign.campaign_id) {
         fetchCampaigns();
         await contract?.acceptProjectCampaign(campaign.campaign_id, {
-          gasLimit: 3000000, // Increase as needed
+          gasLimit: 5000000, // Increase as needed
         });
         toast({
           title: "Campaign accepted",
@@ -242,6 +243,7 @@ const KOLDashboard = () => {
 
     const timer = setInterval(async () => {
       try {
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
         const response = await fetch(
           `${import.meta.env.VITE_BASE_URL}/verify-tweet`,
           {
@@ -506,7 +508,19 @@ const KOLDashboard = () => {
               <DialogTitle>Accept Campaign</DialogTitle>
             </DialogHeader>
 
-            <Textarea value={aiTweet} className="mb-4" disabled={true} />
+            <div className="relative">
+              <Textarea value={aiTweet} className="mb-4 pr-10" />
+              <Copy
+                className="absolute top-2 right-2"
+                size={16}
+                color="gray"
+                cursor="pointer"
+                onClick={() => {
+                  navigator.clipboard.writeText(aiTweet);
+                }}
+              />
+            </div>
+
             <DialogFooter>
               <Button
                 onClick={() => {
@@ -531,6 +545,7 @@ const KOLDashboard = () => {
           </DialogContent>
         </Dialog>
       )}
+
       {tweetVerificationOpen && (
         <Dialog
           open={tweetVerificationOpen}
