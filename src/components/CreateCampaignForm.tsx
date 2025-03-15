@@ -142,15 +142,25 @@ export function CreateCampaignForm({
         ...formData,
         amount: Number(value),
       });
+    } else if (name === "offer_end_date" || name === "promotion_end_date") {
+      setFormData({
+        ...formData,
+        [name]: new Date(value).getTime(), // Convert local datetime to UTC timestamp
+      });
     } else {
       setFormData({
         ...formData,
-        [name]:
-          name === "offer_end_date" || name === "promotion_end_date"
-            ? new Date(value).getTime()
-            : value,
+        [name]: value,
       });
     }
+  };
+
+  const formatToLocalDatetime = (utcTimestamp: number) => {
+    if (!utcTimestamp) return "";
+    const date = new Date(utcTimestamp);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16); // Format for datetime-local input
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -437,12 +447,7 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.offer_end_date
-                  ? new Date(
-                      new Date(formData.offer_end_date).getTime() -
-                        new Date().getTimezoneOffset() * 60000
-                    )
-                      .toISOString()
-                      .slice(0, 16)
+                  ? formatToLocalDatetime(formData.offer_end_date)
                   : ""
               }
               onChange={handleChange}
@@ -456,12 +461,7 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.offer_end_date
-                  ? new Date(
-                      new Date(formData.offer_end_date).getTime() -
-                        new Date().getTimezoneOffset() * 60000
-                    )
-                      .toISOString()
-                      .slice(0, 16)
+                  ? formatToLocalDatetime(formData.offer_end_date)
                   : ""
               }
               onChange={handleChange}
@@ -480,12 +480,7 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.promotion_end_date
-                  ? new Date(
-                      new Date(formData.promotion_end_date).getTime() -
-                        new Date().getTimezoneOffset() * 60000
-                    )
-                      .toISOString()
-                      .slice(0, 16)
+                  ? formatToLocalDatetime(formData.promotion_end_date)
                   : ""
               }
               onChange={handleChange}
@@ -499,12 +494,7 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.promotion_end_date
-                  ? new Date(
-                      new Date(formData.promotion_end_date).getTime() -
-                        new Date().getTimezoneOffset() * 60000
-                    )
-                      .toISOString()
-                      .slice(0, 16)
+                  ? formatToLocalDatetime(formData.promotion_end_date)
                   : ""
               }
               onChange={handleChange}
@@ -524,7 +514,7 @@ export function CreateCampaignForm({
           value={formData.amount || ""}
           onChange={handleChange}
           required
-          min="0.0001"
+          // min="0.0001"
           step="0.01"
         />
       </div>

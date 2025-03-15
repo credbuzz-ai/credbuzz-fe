@@ -269,12 +269,11 @@ const BusinessDashboard = () => {
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Promotion ends:</span>
                         {campaign.promotion_end_date > currentTime &&
-                        campaign.status === "open" ? (
+                        campaign.status === "accepted" ? (
                           <span>{formatTimeLeft(promotionTimeLeft)}</span>
                         ) : (
                           <span>
                             {{
-                              accepted: "Accepted",
                               fulfilled: "Fulfilled",
                               unfulfilled: "Unfulfilled",
                             }[campaign.status] || "Expired"}
