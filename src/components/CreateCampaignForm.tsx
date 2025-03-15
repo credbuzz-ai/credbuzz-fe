@@ -173,6 +173,7 @@ export function CreateCampaignForm({
           amount: formData.amount,
           offer_end_date: formData.offer_end_date,
           promotion_end_date: formData.promotion_end_date,
+          status: "open",
         };
       } else {
         url = `${import.meta.env.VITE_BASE_URL}/create-campaign`;
@@ -186,6 +187,7 @@ export function CreateCampaignForm({
           amount: formData.amount,
           offer_end_date: formData.offer_end_date,
           promotion_end_date: formData.promotion_end_date,
+          status: "open",
         };
       }
 
@@ -435,7 +437,12 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.offer_end_date
-                  ? new Date(formData.offer_end_date).toISOString().slice(0, 16)
+                  ? new Date(
+                      new Date(formData.offer_end_date).getTime() -
+                        new Date().getTimezoneOffset() * 60000
+                    )
+                      .toISOString()
+                      .slice(0, 16)
                   : ""
               }
               onChange={handleChange}
@@ -449,7 +456,12 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.offer_end_date
-                  ? new Date(formData.offer_end_date).toISOString().slice(0, 16)
+                  ? new Date(
+                      new Date(formData.offer_end_date).getTime() -
+                        new Date().getTimezoneOffset() * 60000
+                    )
+                      .toISOString()
+                      .slice(0, 16)
                   : ""
               }
               onChange={handleChange}
@@ -468,7 +480,10 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.promotion_end_date
-                  ? new Date(formData.promotion_end_date)
+                  ? new Date(
+                      new Date(formData.promotion_end_date).getTime() -
+                        new Date().getTimezoneOffset() * 60000
+                    )
                       .toISOString()
                       .slice(0, 16)
                   : ""
@@ -484,7 +499,10 @@ export function CreateCampaignForm({
               type="datetime-local"
               value={
                 formData.promotion_end_date
-                  ? new Date(formData.promotion_end_date)
+                  ? new Date(
+                      new Date(formData.promotion_end_date).getTime() -
+                        new Date().getTimezoneOffset() * 60000
+                    )
                       .toISOString()
                       .slice(0, 16)
                   : ""

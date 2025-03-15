@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { toast, useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import AppHeader from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/lib/types";
@@ -203,39 +203,67 @@ const KOLDashboard = () => {
 
   const [timeLeft, setTimeLeft] = useState(10); // 2 minutes
 
+  const updateTweetInDB = async () => {
+    const response = await fetch(
+      `${import.meta.env.VITE_BASE_URL}/update-campaign`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_TEST_API_KEY,
+          source: import.meta.env.VITE_SOURCE,
+        },
+        body: JSON.stringify({
+          campaign_id: Number(campaignId),
+          tweet_url: tweetLink,
+        }),
+      }
+    );
+    if (response.status === 200) {
+      const data = await response.json();
+      console.log(data);
+    }
+  };
   useEffect(() => {
     if (!tweetVerificationOpen) {
       setTimeLeft(10); // Reset timer when dialog is closed
       return;
     }
 
+    if (timeLeft === 10) {
+      updateTweetInDB();
+    }
+
     if (timeLeft === 0) return;
 
     const timer = setInterval(async () => {
       try {
-        // const response = await fetch(
-        //   `${import.meta.env.VITE_BASE_URL}/verify-tweet`,
-        //   {
-        //     method: "POST",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //       "x-api-key": import.meta.env.VITE_TEST_API_KEY,
-        //       source: import.meta.env.VITE_SOURCE,
-        //     },
-        //     body: JSON.stringify({
-        //       campaign_id: campaignId,
-        //     }),
-        //   }
-        // );
-        // if (response.status === 200) {
-        //   const data = await response.json();
-        //   setVerificationStatus(data.result.verification_status);
-        // }
+        const response = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/verify-tweet`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": import.meta.env.VITE_TEST_API_KEY,
+              source: import.meta.env.VITE_SOURCE,
+            },
+            body: JSON.stringify({
+              campaign_id: Number(campaignId),
+            }),
+          }
+        );
+        if (response.status === 200) {
+          const data = await response.json();
+          console.log(data);
+          setTimeLeft(0);
+          fetchCampaigns();
+          setVerificationStatus(true);
+        }
       } catch (error) {
         console.error(error);
       }
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    }, 5000);
 
     return () => clearInterval(timer);
   }, [tweetVerificationOpen, timeLeft]);
@@ -297,32 +325,22 @@ const KOLDashboard = () => {
                     </h3>
                     <span
                       className={`text-xs font-medium px-2 py-1 rounded ${
-                        campaign.status === "accepted" ||
-                        campaign.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : campaign.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : campaign.status === "fulfilled"
-                          ? "bg-blue-100 text-blue-800"
-                          : campaign.status === "expired"
-                          ? "bg-red-100 text-red-800"
-                          : campaign.status === "discarded"
-                          ? "bg-gray-100 text-gray-800"
-                          : "bg-gray-200 text-gray-900"
+                        {
+                          open: "bg-yellow-100 text-yellow-800",
+                          accepted: "bg-green-100 text-green-800",
+                          discarded: "bg-gray-100 text-gray-800",
+                          fulfilled: "bg-blue-100 text-blue-800",
+                          unfulfilled: "bg-red-100 text-red-800",
+                        }[campaign.status] || "bg-gray-200 text-gray-900"
                       }`}
                     >
-                      {campaign.status === "accepted" ||
-                      campaign.status === "active"
-                        ? "Active"
-                        : campaign.status === "pending"
-                        ? "Pending"
-                        : campaign.status === "fulfilled"
-                        ? "Fulfilled"
-                        : campaign.status === "expired"
-                        ? "Expired"
-                        : campaign.status === "discarded"
-                        ? "Discarded"
-                        : "Unknown"}
+                      {{
+                        open: "Open",
+                        accepted: "Accepted",
+                        discarded: "Discarded",
+                        fulfilled: "Fulfilled",
+                        unfulfilled: "Unfulfilled",
+                      }[campaign.status] || "Unknown"}
                     </span>
                   </div>
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -340,27 +358,32 @@ const KOLDashboard = () => {
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Offer ends:</span>
                       {campaign.offer_end_date > currentTime &&
-                      campaign.status === "pending" ? (
+                      campaign.status === "open" ? (
                         <span>{formatTimeLeft(offerTimeLeft)}</span>
-                      ) : campaign.status === "accepted" ? (
-                        <span>Accepted</span>
-                      ) : campaign.status === "fulfilled" ? (
-                        <span>Fulfilled</span>
                       ) : (
-                        <span>Expired</span>
+                        <span>
+                          {{
+                            accepted: "Accepted",
+                            fulfilled: "Fulfilled",
+                            unfulfilled: "Unfulfilled",
+                          }[campaign.status] || "Expired"}
+                        </span>
                       )}
                     </div>
-                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
                       <span>Promotion ends:</span>
                       {campaign.promotion_end_date > currentTime &&
-                      campaign.status === "pending" ? (
+                      campaign.status === "open" ? (
                         <span>{formatTimeLeft(promotionTimeLeft)}</span>
-                      ) : campaign.status === "accepted" ? (
-                        <span>Accepted</span>
-                      ) : campaign.status === "fulfilled" ? (
-                        <span>Fulfilled</span>
                       ) : (
-                        <span>Expired</span>
+                        <span>
+                          {{
+                            accepted: "Accepted",
+                            fulfilled: "Fulfilled",
+                            unfulfilled: "Unfulfilled",
+                          }[campaign.status] || "Expired"}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -373,7 +396,7 @@ const KOLDashboard = () => {
                   <div className="flex justify-end items-center mt-3 gap-2">
                     {!isExpired && (
                       <>
-                        {campaign.status === "pending" ? (
+                        {campaign.status === "open" ? (
                           <Button
                             onClick={() => {
                               setAcceptModalOpen(true);
@@ -386,7 +409,8 @@ const KOLDashboard = () => {
                           >
                             Accept
                           </Button>
-                        ) : campaign.status === "accepted" ? (
+                        ) : campaign.status === "accepted" ||
+                          campaign.status === "unfulfilled" ? (
                           <Button
                             onClick={() => {
                               setCampaignId(campaign.campaign_id.toString());
@@ -486,31 +510,49 @@ const KOLDashboard = () => {
             <DialogHeader>
               <DialogTitle>Verifying Your Tweet</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col justify-center items-center h-full">
-              <div className="w-1/2 h-1/2 bg-gray-200 rounded-lg"></div>
-              <p className="mt-4 text-sm text-gray-500">
-                Verification will complete in {Math.floor(timeLeft / 60)}:
-                {(timeLeft % 60).toString().padStart(2, "0")}
-              </p>
-            </div>
+            {timeLeft > 0 && (
+              <div className="flex flex-col justify-center items-center h-full">
+                <div className="w-1/2 h-1/2 bg-gray-200 rounded-lg"></div>
+                <p className="mt-4 text-sm text-gray-500">
+                  Verification will complete in {Math.floor(timeLeft / 60)}:
+                  {(timeLeft % 60).toString().padStart(2, "0")}
+                </p>
+              </div>
+            )}
+            {verificationStatus && (
+              <div className="flex flex-col justify-center items-center h-full">
+                <div className="w-1/2 h-1/2 bg-gray-200 rounded-lg"></div>
+                <p className="mt-4 text-sm text-gray-500">
+                  Verification successful!
+                </p>
+              </div>
+            )}
             <DialogFooter>
-              <Button
-                disabled={timeLeft > 0}
-                onClick={() => {
-                  setTweetVerificationOpen(false);
-                  claimCampaign(campaignId, tweetLink);
-                }}
-              >
-                Complete Verification
-              </Button>
-              <DialogClose asChild>
+              {verificationStatus || timeLeft > 0 ? (
                 <Button
-                  variant="outline"
-                  onClick={() => setTweetVerificationOpen(false)}
+                  disabled={timeLeft > 0}
+                  onClick={() => {
+                    setTweetVerificationOpen(false);
+                    claimCampaign(campaignId, tweetLink);
+                  }}
                 >
-                  Cancel
+                  Complete Verification
                 </Button>
-              </DialogClose>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-500">
+                    Verification failed. Please try again.
+                  </p>
+                  <DialogClose asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setTweetVerificationOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                </>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -221,32 +221,22 @@ const BusinessDashboard = () => {
                       </h3>
                       <span
                         className={`text-xs font-medium px-2 py-1 rounded ${
-                          campaign.status === "accepted" ||
-                          campaign.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : campaign.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : campaign.status === "fulfilled"
-                            ? "bg-blue-100 text-blue-800"
-                            : campaign.status === "expired"
-                            ? "bg-red-100 text-red-800"
-                            : campaign.status === "discarded"
-                            ? "bg-gray-100 text-gray-800"
-                            : "bg-gray-200 text-gray-900"
+                          {
+                            open: "bg-yellow-100 text-yellow-800",
+                            accepted: "bg-green-100 text-green-800",
+                            discarded: "bg-gray-100 text-gray-800",
+                            fulfilled: "bg-blue-100 text-blue-800",
+                            unfulfilled: "bg-red-100 text-red-800",
+                          }[campaign.status] || "bg-gray-200 text-gray-900"
                         }`}
                       >
-                        {campaign.status === "accepted" ||
-                        campaign.status === "active"
-                          ? "Active"
-                          : campaign.status === "pending"
-                          ? "Pending"
-                          : campaign.status === "fulfilled"
-                          ? "Fulfilled"
-                          : campaign.status === "expired"
-                          ? "Expired"
-                          : campaign.status === "discarded"
-                          ? "Discarded"
-                          : "Unknown"}
+                        {{
+                          open: "Open",
+                          accepted: "Accepted",
+                          discarded: "Discarded",
+                          fulfilled: "Fulfilled",
+                          unfulfilled: "Unfulfilled",
+                        }[campaign.status] || "Unknown"}
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -264,27 +254,31 @@ const BusinessDashboard = () => {
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Offer ends:</span>
                         {campaign.offer_end_date > currentTime &&
-                        campaign.status === "pending" ? (
+                        campaign.status === "open" ? (
                           <span>{formatTimeLeft(offerTimeLeft)}</span>
-                        ) : campaign.status === "accepted" ? (
-                          <span>Accepted</span>
-                        ) : campaign.status === "fulfilled" ? (
-                          <span>Fulfilled</span>
                         ) : (
-                          <span>Expired</span>
+                          <span>
+                            {{
+                              accepted: "Accepted",
+                              fulfilled: "Fulfilled",
+                              unfulfilled: "Unfulfilled",
+                            }[campaign.status] || "Expired"}
+                          </span>
                         )}
                       </div>
-                      <div className="flex justify-between text-xs text-gray-500 mb-2">
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Promotion ends:</span>
                         {campaign.promotion_end_date > currentTime &&
-                        campaign.status === "pending" ? (
+                        campaign.status === "open" ? (
                           <span>{formatTimeLeft(promotionTimeLeft)}</span>
-                        ) : campaign.status === "accepted" ? (
-                          <span>Accepted</span>
-                        ) : campaign.status === "fulfilled" ? (
-                          <span>Fulfilled</span>
                         ) : (
-                          <span>Expired</span>
+                          <span>
+                            {{
+                              accepted: "Accepted",
+                              fulfilled: "Fulfilled",
+                              unfulfilled: "Unfulfilled",
+                            }[campaign.status] || "Expired"}
+                          </span>
                         )}
                       </div>
                     </div>
