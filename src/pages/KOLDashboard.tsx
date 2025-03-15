@@ -5,7 +5,7 @@ import { toast, useToast } from "@/hooks/use-toast";
 import AppHeader from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/lib/types";
-// import { useContract } from "@/hooks/useContract";
+import { useContract } from "@/hooks/useContract";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ const KOLDashboard = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [userId, setUserId] = useState(null);
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  // const { contract } = useContract();
+  const { fulfilProjectCampaign, acceptProjectCampaign } = useContract();
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [tweetLink, setTweetLink] = useState("");
   const [open, setOpen] = useState(false);
@@ -31,6 +31,8 @@ const KOLDashboard = () => {
   const [aiTweet, setAiTweet] = useState("");
   const [acceptCampaignId, setAcceptCampaignId] = useState<string | null>(null);
   const [tweetVerificationOpen, setTweetVerificationOpen] = useState(false);
+
+  const [verificationStatus, setVerificationStatus] = useState(false);
 
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
@@ -154,7 +156,7 @@ const KOLDashboard = () => {
       );
       if (response.status === 200 && campaign.campaign_id) {
         fetchCampaigns();
-        // await contract?.acceptProjectCampaign(campaign.campaign_id);
+        await acceptProjectCampaign(campaign.campaign_id);
         toast({
           title: "Campaign accepted",
           description: "You have accepted the campaign",
@@ -189,7 +191,7 @@ const KOLDashboard = () => {
     );
 
     if (response.status === 200 && campaignId) {
-      // await contract?.fulfilProjectCampaign(Number(campaignId));
+      await fulfilProjectCampaign(Number(campaignId));
       toast({
         title: "Campaign claimed",
         description: "You have claimed the campaign",
@@ -209,7 +211,29 @@ const KOLDashboard = () => {
 
     if (timeLeft === 0) return;
 
-    const timer = setInterval(() => {
+    const timer = setInterval(async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/verify-tweet`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": import.meta.env.VITE_TEST_API_KEY,
+              source: import.meta.env.VITE_SOURCE,
+            },
+            body: JSON.stringify({
+              campaign_id: campaignId,
+            }),
+          }
+        );
+        if (response.status === 200) {
+          const data = await response.json();
+          setVerificationStatus(data.result.verification_status);
+        }
+      } catch (error) {
+        console.error(error);
+      }
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 

@@ -9,7 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-// import { useContract } from "@/hooks/useContract";
+import { useContract } from "@/hooks/useContract";
 import { Campaign, KOL } from "@/lib/types";
 import { ethers } from "ethers";
 interface CreateCampaignFormProps {
@@ -50,7 +50,7 @@ export function CreateCampaignForm({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
-  // const { createNewCampaign, transferUSDC, updateCampaign } = useContract();
+  const { createNewCampaign, transferUSDC, updateCampaign } = useContract();
 
   // Initialize form with existing campaign data if editing
   useEffect(() => {
@@ -236,28 +236,20 @@ export function CreateCampaignForm({
 
       const userDetails = await userData.json();
 
-      const campaignId = data.result.campaign_id[0][0];
+      const campaignId = data.result.campaign_id;
 
-      console.log(data);
-      console.log(campaignId);
-      console.log(typeof campaignId);
-      console.log(!existingCampaign);
-      console.log(!existingCampaign && campaignId);
       if (!existingCampaign && campaignId) {
-        console.log(data);
-        console.log(campaignId);
-        console.log(typeof campaignId);
         // todo: wallet address is mandatory
-        // await createNewCampaign(
-        //   userDetails.result.wallet_addr,
-        //   Number(ethers.parseUnits(campaignData.amount.toString(), 6)),
-        //   Number(campaignData.promotion_end_date),
-        //   Number(campaignData.offer_end_date),
-        //   campaignId
-        // );
-        // await transferUSDC(
-        //   Number(ethers.parseUnits(campaignData.amount.toString(), 6))
-        // );
+        await createNewCampaign(
+          userDetails.result.wallet_addr,
+          Number(ethers.parseUnits(formData.amount.toString(), 6)),
+          Number(formData.promotion_end_date),
+          Number(formData.offer_end_date),
+          Number(campaignId)
+        );
+        await transferUSDC(
+          Number(ethers.parseUnits(formData.amount.toString(), 6))
+        );
       } else {
         // todo
         // await updateCampaign(
@@ -268,14 +260,14 @@ export function CreateCampaignForm({
         // );
 
         if (existingCampaign.amount < campaignData.amount) {
-          // await transferUSDC(
-          //   Number(
-          //     ethers.parseUnits(
-          //       (campaignData.amount - existingCampaign.amount).toString(),
-          //       6
-          //     )
-          //   )
-          // );
+          await transferUSDC(
+            Number(
+              ethers.parseUnits(
+                (campaignData.amount - existingCampaign.amount).toString(),
+                6
+              )
+            )
+          );
         }
       }
 

@@ -13,7 +13,7 @@ const AppLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setAuth } = useAuth();
-  // const { register } = useContract();
+  const { register } = useContract();
 
   useEffect(() => {
     if (typeof window.ethereum === "undefined") {
@@ -67,7 +67,7 @@ const AppLogin = () => {
         throw new Error("Failed to create user");
       }
 
-      // register();
+      register();
 
       navigateToDashboard(userType);
     } catch (error) {
